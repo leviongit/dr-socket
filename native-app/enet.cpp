@@ -173,7 +173,7 @@ void register_socket_symbols(mrb_state *mrb){
  *	127.0.0.1:*
  *	website.com:8080
  */
-bool parse_address(const char *addr_str, ENetAddress *address, const char *error) {
+bool parse_address(const char *addr_str, ENetAddress *address, const char **error) {
     int host_i = 0, port_i = 0;
     char host_str[128] = {0};
     char port_str[32] = {0};
@@ -183,7 +183,7 @@ bool parse_address(const char *addr_str, ENetAddress *address, const char *error
 
     while (*c != 0) {
         if (host_i >= 128 || port_i >= 32 ){
-            error = "Hostname too long";
+            if (error != nullptr) *error = "Hostname too long";
             return true;
         }
         if (scanning_port) {
@@ -201,11 +201,11 @@ bool parse_address(const char *addr_str, ENetAddress *address, const char *error
     port_str[port_i] = '\0';
 
     if (host_i == 0){
-        error = "Failed to parse address";
+        if (error != nullptr) *error = "Failed to parse address";
         return true;
     }
     if (port_i == 0){
-        error = "Missing port in address";
+        if (error != nullptr) *error = "Missing port in address";
         return true;
     }
 
@@ -213,7 +213,7 @@ bool parse_address(const char *addr_str, ENetAddress *address, const char *error
         address->host = ENET_HOST_ANY;
     } else {
         if (enet_address_set_host(address, host_str) != 0) {
-            error = "Failed to resolve host name";
+            if (error != nullptr) *error = "Failed to resolve host name";
             return true;
         }
     }
@@ -906,7 +906,7 @@ void socket_open_enet(mrb_state* state) {
         if(m_is_host){
             if(only_local){
                 const char *error;
-                if(parse_address(fmt::format("{}:{}", "localhost", m_port).c_str(), &e_address, error)){
+                if(parse_address(fmt::format("{}:{}", "localhost", m_port).c_str(), &e_address, &error)){
                     print::print(state, print::PRINT_ERROR, error);
                     return;
                 }
@@ -944,7 +944,7 @@ void socket_open_enet(mrb_state* state) {
         size_t channel_count = 1;
 
         const char* error;
-        if(parse_address(address.c_str(), &e_address, error)){
+        if(parse_address(address.c_str(), &e_address, &error)){
             print::print(state, print::PRINT_ERROR, error);
             return;
         }
