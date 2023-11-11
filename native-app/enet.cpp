@@ -1037,9 +1037,10 @@ void socket_open_enet(mrb_state* state) {
 }
 
     mrb_value dr_peer_initialize(mrb_state *state, mrb_value self) {
-        mrb_int is_host, port, only_local;
-        API->mrb_get_args(state, "iii", &is_host, &port, &only_local);
-        auto peer = new DRPeer(state, is_host != 0, port, only_local != 0);
+        mrb_int port;
+        mrb_bool is_host, only_local;
+        API->mrb_get_args(state, "bib", &is_host, &port, &only_local);
+        auto peer = new DRPeer(state, is_host, port, only_local);
         dr_peers[peer_counter] = peer;
         auto to_return = peer_counter;
         peer_counter++;
